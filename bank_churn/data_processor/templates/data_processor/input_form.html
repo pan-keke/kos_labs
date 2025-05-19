@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block title %}Предсказание оттока клиентов - Анализ оттока клиентов банка{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3>Предсказание оттока клиентов</h3>
+                <p class="text-muted mb-0">Введите информацию о клиенте для предсказания вероятности оттока</p>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.creditscore.id_for_label }}" class="form-label">Кредитный рейтинг</label>
+                                {{ form.creditscore }}
+                                <div class="form-text">{{ form.creditscore.help_text }}</div>
+                                {% if form.creditscore.errors %}
+                                <div class="invalid-feedback d-block">{{ form.creditscore.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.geography.id_for_label }}" class="form-label">Регион</label>
+                                {{ form.geography }}
+                                <div class="form-text">{{ form.geography.help_text }}</div>
+                                {% if form.geography.errors %}
+                                <div class="invalid-feedback d-block">{{ form.geography.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.gender.id_for_label }}" class="form-label">Пол</label>
+                                {{ form.gender }}
+                                <div class="form-text">{{ form.gender.help_text }}</div>
+                                {% if form.gender.errors %}
+                                <div class="invalid-feedback d-block">{{ form.gender.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.age.id_for_label }}" class="form-label">Возраст</label>
+                                {{ form.age }}
+                                <div class="form-text">{{ form.age.help_text }}</div>
+                                {% if form.age.errors %}
+                                <div class="invalid-feedback d-block">{{ form.age.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.tenure.id_for_label }}" class="form-label">Срок обслуживания</label>
+                                {{ form.tenure }}
+                                <div class="form-text">{{ form.tenure.help_text }}</div>
+                                {% if form.tenure.errors %}
+                                <div class="invalid-feedback d-block">{{ form.tenure.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.balance.id_for_label }}" class="form-label">Баланс</label>
+                                {{ form.balance }}
+                                <div class="form-text">{{ form.balance.help_text }}</div>
+                                {% if form.balance.errors %}
+                                <div class="invalid-feedback d-block">{{ form.balance.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.numofproducts.id_for_label }}" class="form-label">Количество продуктов</label>
+                                {{ form.numofproducts }}
+                                <div class="form-text">{{ form.numofproducts.help_text }}</div>
+                                {% if form.numofproducts.errors %}
+                                <div class="invalid-feedback d-block">{{ form.numofproducts.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    {{ form.hascrcard }}
+                                    <label class="form-check-label" for="{{ form.hascrcard.id_for_label }}">
+                                        Есть кредитная карта
+                                    </label>
+                                    <div class="form-text">{{ form.hascrcard.help_text }}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    {{ form.isactivemember }}
+                                    <label class="form-check-label" for="{{ form.isactivemember.id_for_label }}">
+                                        Активный клиент
+                                    </label>
+                                    <div class="form-text">{{ form.isactivemember.help_text }}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.estimatedsalary.id_for_label }}" class="form-label">Предполагаемая зарплата</label>
+                                {{ form.estimatedsalary }}
+                                <div class="form-text">{{ form.estimatedsalary.help_text }}</div>
+                                {% if form.estimatedsalary.errors %}
+                                <div class="invalid-feedback d-block">{{ form.estimatedsalary.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Рассчитать вероятность оттока</button>
+                        <a href="{% url 'data_processor:customer_list' %}" class="btn btn-secondary">Отмена</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Валидация числовых полей
+    $('input[type="number"]').on('input', function() {
+        let value = parseFloat($(this).val());
+        let min = parseFloat($(this).attr('min'));
+        let max = parseFloat($(this).attr('max'));
+        
+        if (!isNaN(min) && value < min) $(this).val(min);
+        if (!isNaN(max) && value > max) $(this).val(max);
+    });
+});
+</script>
+{% endblock %}

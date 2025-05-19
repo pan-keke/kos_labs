@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}Результат предсказания - Анализ оттока клиентов банка{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3>Результат предсказания оттока</h3>
+            </div>
+            <div class="card-body">
+                {% if prediction %}
+                    <div class="alert {% if prediction.will_churn %}alert-danger{% else %}alert-success{% endif %} mb-4">
+                        <h4 class="alert-heading">
+                            {% if prediction.will_churn %}
+                            Высокий риск оттока
+                            {% else %}
+                            Низкий риск оттока
+                            {% endif %}
+                        </h4>
+                        <p class="mb-0">
+                            Вероятность оттока: <strong>{{ prediction.probability|floatformat:2 }}%</strong>
+                        </p>
+                    </div>
+
+                    <h5 class="mb-3">Информация о клиенте</h5>
+                    <table class="table">
+                        <tr>
+                            <th>Кредитный рейтинг:</th>
+                            <td>{{ prediction.customer_data.creditscore }}</td>
+                        </tr>
+                        <tr>
+                            <th>Регион:</th>
+                            <td>{{ prediction.customer_data.geography }}</td>
+                        </tr>
+                        <tr>
+                            <th>Пол:</th>
+                            <td>{{ prediction.customer_data.gender }}</td>
+                        </tr>
+                        <tr>
+                            <th>Возраст:</th>
+                            <td>{{ prediction.customer_data.age }}</td>
+                        </tr>
+                        <tr>
+                            <th>Срок обслуживания:</th>
+                            <td>{{ prediction.customer_data.tenure }} лет</td>
+                        </tr>
+                        <tr>
+                            <th>Баланс:</th>
+                            <td>₽{{ prediction.customer_data.balance|floatformat:2 }}</td>
+                        </tr>
+                        <tr>
+                            <th>Количество продуктов:</th>
+                            <td>{{ prediction.customer_data.numofproducts }}</td>
+                        </tr>
+                        <tr>
+                            <th>Есть кредитная карта:</th>
+                            <td>{% if prediction.customer_data.hascrcard %}Да{% else %}Нет{% endif %}</td>
+                        </tr>
+                        <tr>
+                            <th>Активный клиент:</th>
+                            <td>{% if prediction.customer_data.isactivemember %}Да{% else %}Нет{% endif %}</td>
+                        </tr>
+                        <tr>
+                            <th>Предполагаемая зарплата:</th>
+                            <td>₽{{ prediction.customer_data.estimatedsalary|floatformat:2 }}</td>
+                        </tr>
+                    </table>
+                {% else %}
+                    <div class="alert alert-warning">
+                        Нет данных для предсказания. Пожалуйста, заполните форму предсказания.
+                    </div>
+                {% endif %}
+
+                <div class="d-grid gap-2 mt-4">
+                    <a href="{% url 'data_processor:input_form' %}" class="btn btn-primary">Сделать новое предсказание</a>
+                    <a href="{% url 'data_processor:customer_list' %}" class="btn btn-secondary">Вернуться к списку клиентов</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

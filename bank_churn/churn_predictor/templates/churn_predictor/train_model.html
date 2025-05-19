@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block title %}Обучение модели - Анализ оттока клиентов банка{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Обучение нейронной сети</h1>
+
+    {% if messages %}
+    <div class="messages mb-4">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Статус модели</h5>
+                </div>
+                <div class="card-body">
+                    <p>
+                        <strong>Файл модели:</strong>
+                        {% if model_exists %}
+                            <span class="text-success">✓ Существует</span>
+                            <br>
+                            <small class="text-muted">Последнее изменение: {{ last_modified|date:"d.m.Y H:i" }}</small>
+                        {% else %}
+                            <span class="text-danger">✗ Не найден</span>
+                        {% endif %}
+                    </p>
+                    <p>
+                        <strong>Доступные данные для обучения:</strong>
+                        {% if total_customers > 0 %}
+                            <span class="text-success">{{ total_customers }} клиентов</span>
+                        {% else %}
+                            <span class="text-danger">Данные отсутствуют</span>
+                        {% endif %}
+                    </p>
+
+                    {% if training_results %}
+                    <hr>
+                    <h6>Результаты последнего обучения:</h6>
+                    <div class="mt-3">
+                        <h6 class="text-muted">Параметры модели:</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>Epochs:</strong> {{ training_results.training_params.epochs }}</li>
+                            <li><strong>Batch Size:</strong> {{ training_results.training_params.batch_size }}</li>
+                            <li><strong>Learning Rate:</strong> {{ training_results.training_params.learning_rate }}</li>
+                            <li><strong>Validation Split:</strong> {{ training_results.training_params.validation_split }}</li>
+                        </ul>
+                        
+                        <h6 class="text-muted mt-3">Метрики производительности:</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>Точность:</strong> {{ training_results.metrics.accuracy|floatformat:4 }}</li>
+                            <li><strong>AUC:</strong> {{ training_results.metrics.auc|floatformat:4 }}</li>
+                            <li><strong>Потери:</strong> {{ training_results.metrics.loss|floatformat:4 }}</li>
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Обучить новую модель</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="epochs" class="form-label">Количество эпох (Epochs)</label>
+                            <input type="number" class="form-control" id="epochs" name="epochs" 
+                                   value="100" min="1" max="1000">
+                            <div class="form-text">Количество итераций обучения (1-1000)</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="batch_size" class="form-label">Размер батча (Batch Size)</label>
+                            <select class="form-select" id="batch_size" name="batch_size">
+                                <option value="16">16</option>
+                                <option value="32" selected>32</option>
+                                <option value="64">64</option>
+                                <option value="128">128</option>
+                            </select>
+                            <div class="form-text">Количество образцов для одного обновления градиента</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="learning_rate" class="form-label">Скорость обучения (Learning Rate)</label>
+                            <input type="number" class="form-control" id="learning_rate" name="learning_rate" 
+                                   value="0.001" step="0.0001" min="0.0001" max="0.1">
+                            <div class="form-text">Шаг градиентного спуска (0.0001-0.1)</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="validation_split" class="form-label">Доля валидационной выборки (Validation Split)</label>
+                            <input type="number" class="form-control" id="validation_split" name="validation_split" 
+                                   value="0.2" step="0.05" min="0.1" max="0.3">
+                            <div class="form-text">Часть данных для валидации (0.1-0.3)</div>
+                        </div>
+
+                        {% if total_customers > 0 %}
+                            <button type="submit" class="btn btn-primary">
+                                Начать обучение
+                            </button>
+                        {% else %}
+                            <button type="submit" class="btn btn-primary" disabled>
+                                Начать обучение (нет данных)
+                            </button>
+                            <div class="alert alert-warning mt-3">
+                                Пожалуйста, загрузите данные клиентов перед обучением модели.
+                            </div>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
