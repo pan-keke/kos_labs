@@ -4,6 +4,8 @@ from django.http import JsonResponse
 from data_processor.models import Customer
 from .models import CustomerCluster, CustomerSegment, Recommendation
 import os
+from django.shortcuts import render
+from .models import Recommendation  # если используется модель Recommendation
 
 class RecommendationListView(ListView):
     model = Recommendation
@@ -11,12 +13,26 @@ class RecommendationListView(ListView):
     context_object_name = 'recommendations'
     paginate_by = 50
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        filter_type = self.request.GET.get('filter')
+        
+        if filter_type == 'high':
+            queryset = queryset.filter(priority=1)
+        elif filter_type == 'medium':
+            queryset = queryset.filter(priority=2)
+        elif filter_type == 'low':
+            queryset = queryset.filter(priority=3)
+        
+        return queryset
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Add priority counts to context
         context['high_priority_count'] = Recommendation.objects.filter(priority=1).count()
         context['medium_priority_count'] = Recommendation.objects.filter(priority=2).count()
         context['low_priority_count'] = Recommendation.objects.filter(priority=3).count()
+        context['current_filter'] = self.request.GET.get('filter', '')
         return context
 
 def generate_recommendations(request, customer_id):
@@ -31,8 +47,8 @@ def generate_recommendations(request, customer_id):
             recommendations.append(
                 Recommendation.objects.create(
                     customer=customer,
-                    title='Premium Banking Services',
-                    description='Consider our premium banking services with exclusive benefits and personalized support.',
+                    title='Премиальное банковское обслуживание',
+                    description='Воспользуйтесь нашими премиальными банковскими услугами с эксклюзивными преимуществами и персональной поддержкой.',
                     priority=1
                 )
             )
@@ -42,8 +58,8 @@ def generate_recommendations(request, customer_id):
             recommendations.append(
                 Recommendation.objects.create(
                     customer=customer,
-                    title='Credit Card Offer',
-                    description='Explore our credit card options with special rewards and benefits.',
+                    title='Предложение кредитной карты',
+                    description='Ознакомьтесь с нашими кредитными картами со специальными вознаграждениями и преимуществами.',
                     priority=2
                 )
             )
@@ -53,8 +69,8 @@ def generate_recommendations(request, customer_id):
             recommendations.append(
                 Recommendation.objects.create(
                     customer=customer,
-                    title='Account Activity Benefits',
-                    description='Discover the benefits of active account usage and special promotions.',
+                    title='Преимущества активности счета',
+                    description='Узнайте о преимуществах активного использования счета и специальных акциях.',
                     priority=1
                 )
             )
@@ -64,8 +80,8 @@ def generate_recommendations(request, customer_id):
             recommendations.append(
                 Recommendation.objects.create(
                     customer=customer,
-                    title='Product Diversification',
-                    description='Explore additional banking products to better serve your financial needs.',
+                    title='Диверсификация продуктов',
+                    description='Изучите дополнительные банковские продукты для лучшего обслуживания ваших финансовых потребностей.',
                     priority=3
                 )
             )
@@ -75,8 +91,8 @@ def generate_recommendations(request, customer_id):
             recommendations.append(
                 Recommendation.objects.create(
                     customer=customer,
-                    title='Savings Opportunities',
-                    description='Learn about our savings accounts and investment options to grow your wealth.',
+                    title='Возможности для сбережений',
+                    description='Узнайте о наших сберегательных счетах и инвестиционных возможностях для роста вашего капитала.',
                     priority=2
                 )
             )

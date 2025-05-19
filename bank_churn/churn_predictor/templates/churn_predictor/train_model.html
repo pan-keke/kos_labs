@@ -1,10 +1,77 @@
 {% extends 'base.html' %}
 
-{% block title %}Обучение модели - Анализ оттока клиентов банка{% endblock %}
+{% block title %}💖 Обучение модели - Анализ оттока клиентов банка{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(to right, #ffe0f0, #f9d1f5);
+        font-family: 'Poppins', sans-serif;
+    }
+
+    h1, h5 {
+        color: #ff1493;
+        font-weight: 600;
+    }
+
+    .card {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(255, 105, 180, 0.3);
+        animation: fadeInUp 1s ease both;
+    }
+
+    .card-header {
+        background: #fff0f5;
+        border-bottom: 2px solid #ff69b4;
+        border-top-left-radius: 20px;
+        border-top-right-radius: 20px;
+    }
+
+    .form-control, .form-select {
+        border-radius: 12px;
+        border: 1px solid #ff69b4;
+    }
+
+    .btn-primary {
+        background-color: #ff69b4;
+        border: none;
+        transition: background-color 0.3s ease;
+        font-weight: 500;
+    }
+
+    .btn-primary:hover {
+        background-color: #ff1493;
+    }
+
+    .alert {
+        border-radius: 12px;
+    }
+
+    .text-success {
+        color: #28a745;
+    }
+
+    .text-danger {
+        color: #dc3545;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translate3d(0, 20px, 0);
+        }
+        to {
+            opacity: 1;
+            transform: translate3d(0, 0, 0);
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h1 class="mb-4">Обучение нейронной сети</h1>
+<div class="container py-4">
+    <h1 class="mb-4 text-center">✨ Обучение нейронной сети ✨</h1>
 
     {% if messages %}
     <div class="messages mb-4">
@@ -15,26 +82,25 @@
         {% endfor %}
     </div>
     {% endif %}
-    
-    <div class="row">
+
+    <div class="row g-4">
         <div class="col-md-6">
-            <div class="card mb-4">
+            <div class="card h-100">
                 <div class="card-header">
-                    <h5 class="card-title mb-0">Статус модели</h5>
+                    <h5 class="card-title mb-0">🧠 Статус модели</h5>
                 </div>
                 <div class="card-body">
                     <p>
-                        <strong>Файл модели:</strong>
+                        <strong>Файл модели:</strong><br>
                         {% if model_exists %}
-                            <span class="text-success">✓ Существует</span>
-                            <br>
+                            <span class="text-success">✓ Существует</span><br>
                             <small class="text-muted">Последнее изменение: {{ last_modified|date:"d.m.Y H:i" }}</small>
                         {% else %}
                             <span class="text-danger">✗ Не найден</span>
                         {% endif %}
                     </p>
                     <p>
-                        <strong>Доступные данные для обучения:</strong>
+                        <strong>Доступные данные для обучения:</strong><br>
                         {% if total_customers > 0 %}
                             <span class="text-success">{{ total_customers }} клиентов</span>
                         {% else %}
@@ -44,78 +110,70 @@
 
                     {% if training_results %}
                     <hr>
-                    <h6>Результаты последнего обучения:</h6>
-                    <div class="mt-3">
-                        <h6 class="text-muted">Параметры модели:</h6>
-                        <ul class="list-unstyled">
-                            <li><strong>Epochs:</strong> {{ training_results.training_params.epochs }}</li>
-                            <li><strong>Batch Size:</strong> {{ training_results.training_params.batch_size }}</li>
-                            <li><strong>Learning Rate:</strong> {{ training_results.training_params.learning_rate }}</li>
-                            <li><strong>Validation Split:</strong> {{ training_results.training_params.validation_split }}</li>
-                        </ul>
-                        
-                        <h6 class="text-muted mt-3">Метрики производительности:</h6>
-                        <ul class="list-unstyled">
-                            <li><strong>Точность:</strong> {{ training_results.metrics.accuracy|floatformat:4 }}</li>
-                            <li><strong>AUC:</strong> {{ training_results.metrics.auc|floatformat:4 }}</li>
-                            <li><strong>Потери:</strong> {{ training_results.metrics.loss|floatformat:4 }}</li>
-                        </ul>
-                    </div>
+                    <h6 class="text-muted">🎯 Последние результаты:</h6>
+                    <ul class="list-unstyled">
+                        <li><strong>Epochs:</strong> {{ training_results.training_params.epochs }}</li>
+                        <li><strong>Batch Size:</strong> {{ training_results.training_params.batch_size }}</li>
+                        <li><strong>Learning Rate:</strong> {{ training_results.training_params.learning_rate }}</li>
+                        <li><strong>Validation Split:</strong> {{ training_results.training_params.validation_split }}</li>
+                    </ul>
+                    <h6 class="text-muted mt-3">📊 Метрики:</h6>
+                    <ul class="list-unstyled">
+                        <li><strong>Точность:</strong> {{ training_results.metrics.accuracy|floatformat:4 }}</li>
+                        <li><strong>AUC:</strong> {{ training_results.metrics.auc|floatformat:4 }}</li>
+                        <li><strong>Потери:</strong> {{ training_results.metrics.loss|floatformat:4 }}</li>
+                    </ul>
                     {% endif %}
                 </div>
             </div>
         </div>
-        
+
         <div class="col-md-6">
-            <div class="card">
+            <div class="card h-100">
                 <div class="card-header">
-                    <h5 class="card-title mb-0">Обучить новую модель</h5>
+                    <h5 class="card-title mb-0">🚀 Запуск обучения</h5>
                 </div>
                 <div class="card-body">
                     <form method="post">
                         {% csrf_token %}
                         <div class="mb-3">
-                            <label for="epochs" class="form-label">Количество эпох (Epochs)</label>
-                            <input type="number" class="form-control" id="epochs" name="epochs" 
-                                   value="100" min="1" max="1000">
-                            <div class="form-text">Количество итераций обучения (1-1000)</div>
+                            <label for="epochs" class="form-label">Количество итераций обучения</label>
+                            <input type="number" class="form-control" id="epochs" name="epochs" value="100" min="1" max="1000">
+                            <div class="form-text">1–1000 итераций</div>
                         </div>
-                        
+
                         <div class="mb-3">
-                            <label for="batch_size" class="form-label">Размер батча (Batch Size)</label>
+                            <label for="batch_size" class="form-label">Размер батча</label>
                             <select class="form-select" id="batch_size" name="batch_size">
                                 <option value="16">16</option>
                                 <option value="32" selected>32</option>
                                 <option value="64">64</option>
                                 <option value="128">128</option>
                             </select>
-                            <div class="form-text">Количество образцов для одного обновления градиента</div>
                         </div>
-                        
+
                         <div class="mb-3">
-                            <label for="learning_rate" class="form-label">Скорость обучения (Learning Rate)</label>
-                            <input type="number" class="form-control" id="learning_rate" name="learning_rate" 
+                            <label for="learning_rate" class="form-label">Скорость обучения</label>
+                            <input type="number" class="form-control" id="learning_rate" name="learning_rate"
                                    value="0.001" step="0.0001" min="0.0001" max="0.1">
-                            <div class="form-text">Шаг градиентного спуска (0.0001-0.1)</div>
                         </div>
-                        
+
                         <div class="mb-3">
-                            <label for="validation_split" class="form-label">Доля валидационной выборки (Validation Split)</label>
-                            <input type="number" class="form-control" id="validation_split" name="validation_split" 
+                            <label for="validation_split" class="form-label">Validation Split</label>
+                            <input type="number" class="form-control" id="validation_split" name="validation_split"
                                    value="0.2" step="0.05" min="0.1" max="0.3">
-                            <div class="form-text">Часть данных для валидации (0.1-0.3)</div>
                         </div>
 
                         {% if total_customers > 0 %}
-                            <button type="submit" class="btn btn-primary">
-                                Начать обучение
+                            <button type="submit" class="btn btn-primary w-100">
+                                💾 Начать обучение
                             </button>
                         {% else %}
-                            <button type="submit" class="btn btn-primary" disabled>
-                                Начать обучение (нет данных)
+                            <button type="submit" class="btn btn-primary w-100" disabled>
+                                🚫 Нет данных
                             </button>
                             <div class="alert alert-warning mt-3">
-                                Пожалуйста, загрузите данные клиентов перед обучением модели.
+                                Пожалуйста, загрузите данные перед обучением модели.
                             </div>
                         {% endif %}
                     </form>

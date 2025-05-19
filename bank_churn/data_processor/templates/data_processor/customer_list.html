@@ -2,31 +2,80 @@
 
 {% block title %}Клиенты - Анализ оттока клиентов банка{% endblock %}
 
-{% block content %}
-<h1>Список клиентов</h1>
+{% block extra_head %}
+<link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
+<style>
+    body {
+        background: linear-gradient(135deg, #fff0f5, #ffe4ec);
+        font-family: 'Poppins', sans-serif;
+    }
 
-<div class="table-responsive">
-    <table class="table table-striped">
+    h1 {
+        color: #d63384;
+        font-weight: 600;
+    }
+
+    .table th {
+        background-color: #fce4ec;
+    }
+
+    .table-striped tbody tr:nth-of-type(odd) {
+        background-color: #fff5f8;
+    }
+
+    .badge.bg-success {
+        background-color: #81c784;
+    }
+
+    .badge.bg-warning {
+        background-color: #fdd835;
+        color: #000;
+    }
+
+    .btn-primary {
+        background-color: #e83e8c;
+        border: none;
+    }
+
+    .btn-primary:hover {
+        background-color: #c2185b;
+    }
+
+    .table td, .table th {
+        vertical-align: middle;
+    }
+
+    .card, .table {
+        border-radius: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 data-aos="fade-down">Список клиентов</h1>
+
+<div class="table-responsive" data-aos="fade-up">
+    <table class="table table-striped align-middle">
         <thead>
             <tr>
                 <th>ID</th>
-                <th>Имя</th>
-                <th>Регион</th>
-                <th>Возраст</th>
-                <th>Баланс</th>
-                <th>Продукты</th>
-                <th>Статус</th>
-                <th>Действия</th>
+                <th>👤 Имя</th>
+                <th>🌍 Регион</th>
+                <th>🌟 Возраст</th>
+                <th>💳 Баланс</th>
+                <th>📄 Продукты</th>
+                <th>🔒 Статус</th>
+                <th>⚖️ Действия</th>
             </tr>
         </thead>
         <tbody>
             {% for customer in customers %}
-            <tr>
+            <tr data-aos="fade-up" data-aos-delay="{{ forloop.counter0|add:'1' }}00">
                 <td>{{ customer.customer_id }}</td>
                 <td>{{ customer.surname }}</td>
                 <td>{{ customer.geography }}</td>
                 <td>{{ customer.age }}</td>
-                <td>₽{{ customer.balance|floatformat:2 }}</td>
+                <td>₽ {{ customer.balance|floatformat:2 }}</td>
                 <td>{{ customer.numofproducts }}</td>
                 <td>
                     {% if customer.isactivemember %}
@@ -36,8 +85,10 @@
                     {% endif %}
                 </td>
                 <td>
-                    <a href="{% url 'data_processor:customer_detail' customer.pk %}" 
-                       class="btn btn-sm btn-primary">Просмотр</a>
+                    <a href="{% url 'data_processor:customer_detail' customer.pk %}"
+                       class="btn btn-sm btn-primary">
+                        📄 Просмотр
+                    </a>
                 </td>
             </tr>
             {% endfor %}
@@ -46,11 +97,11 @@
 </div>
 
 {% if is_paginated %}
-<nav>
-    <ul class="pagination justify-content-center">
+<nav data-aos="fade-up">
+    <ul class="pagination justify-content-center mt-4">
         {% if page_obj.has_previous %}
         <li class="page-item">
-            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Назад</a>
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">◀️ Назад</a>
         </li>
         {% endif %}
 
@@ -62,10 +113,16 @@
 
         {% if page_obj.has_next %}
         <li class="page-item">
-            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Вперёд</a>
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Вперёд ▶️</a>
         </li>
         {% endif %}
     </ul>
 </nav>
 {% endif %}
-{% endblock %} 
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+<script>AOS.init({ once: true });</script>
+{% endblock %}
+
