@@ -23,7 +23,7 @@ def create_model():
 def prepare_data(df):
     # Select features
     features = ['CreditScore', 'Age', 'Tenure', 'Balance', 'NumOfProducts',
-                'HasCrCard', 'IsActiveMember', 'EstimatedSalary']
+                'Has credit card', 'Is active member', 'EstimatedSalary']
     
     # Create dummy variables for categorical features
     geography_dummies = pd.get_dummies(df['Geography'], prefix='Geography')
@@ -75,7 +75,7 @@ def train_neural_network(csv_file, epochs=50, batch_size=32):
 def predict_churn(model, scaler, customer_data):
     # Prepare customer data
     features = ['CreditScore', 'Age', 'Tenure', 'Balance', 'NumOfProducts',
-                'HasCrCard', 'IsActiveMember', 'EstimatedSalary',
+                'Has credit card', 'Is active member', 'EstimatedSalary',
                 'Geography_France', 'Geography_Germany', 'Geography_Spain',
                 'Gender_Female', 'Gender_Male']
     

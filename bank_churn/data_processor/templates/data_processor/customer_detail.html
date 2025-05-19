@@ -1,6 +1,342 @@
-{% extends 'base.html' %}{% block title %}{{ customer.surname }} - Детали клиента{% endblock %}{% block content %}<div class="row">    <div class="col-md-8">        <h1>Информация о клиенте: {{ customer.surname }}</h1>                <div class="card mb-4">            <div class="card-body">                <h5 class="card-title">Личная информация</h5>                <table class="table">                    <tr>                        <th>ID клиента:</th>                        <td>{{ customer.customer_id }}</td>                    </tr>                    <tr>                        <th>Регион:</th>                        <td>{{ customer.geography }}</td>                    </tr>                    <tr>                        <th>Пол:</th>                        <td>{{ customer.gender }}</td>                    </tr>                    <tr>                        <th>Возраст:</th>                        <td>{{ customer.age }}</td>                    </tr>                </table>            </div>        </div>        <div class="card mb-4">            <div class="card-body">                <h5 class="card-title">Информация о счете</h5>                <table class="table">                    <tr>                        <th>Кредитный рейтинг:</th>                        <td>{{ customer.creditscore }}</td>                    </tr>                    <tr>                        <th>Баланс:</th>                        <td>₽{{ customer.balance|floatformat:2 }}</td>                    </tr>                    <tr>                        <th>Продукты:</th>                        <td>{{ customer.numofproducts }}</td>                    </tr>                    <tr>                        <th>Срок обслуживания:</th>                        <td>{{ customer.tenure }} лет</td>                    </tr>                    <tr>                        <th>Кредитная карта:</th>                        <td>{% if customer.hascrcard %}Да{% else %}Нет{% endif %}</td>                    </tr>                    <tr>                        <th>Активный клиент:</th>                        <td>{% if customer.isactivemember %}Да{% else %}Нет{% endif %}</td>                    </tr>                    <tr>                        <th>Предполагаемая зарплата:</th>                        <td>₽{{ customer.estimatedsalary|floatformat:2 }}</td>                    </tr>                </table>            </div>        </div>    </div>
+{% extends 'base.html' %}
 
-        <div class="col-md-4">        <div class="card mb-4">            <div class="card-body">                <h5 class="card-title">Анализ оттока</h5>                <button id="predict-churn" class="btn btn-primary mb-3" data-customer-id="{{ customer.pk }}">                    Рассчитать вероятность оттока                </button>                <div id="prediction-result" class="d-none">                    <div class="alert" role="alert"></div>                </div>                                {% if churn_predictions %}                <h6>Предыдущие предсказания</h6>                <ul class="list-group">                    {% for prediction in churn_predictions %}                    <li class="list-group-item">                        {{ prediction.prediction_date|date:"d.m.Y H:i" }}:                        {% if prediction.predicted_churn %}                        <span class="badge bg-danger">Высокий риск ({{ prediction.churn_probability|floatformat:2 }}%)</span>                        {% else %}                        <span class="badge bg-success">Низкий риск ({{ prediction.churn_probability|floatformat:2 }}%)</span>                        {% endif %}                    </li>                    {% endfor %}                </ul>                {% endif %}            </div>        </div>        <div class="card">            <div class="card-body">                <h5 class="card-title">Рекомендации</h5>                <button id="generate-recommendations" class="btn btn-success mb-3" data-customer-id="{{ customer.pk }}">                    Сформировать рекомендации                </button>                <div id="recommendations-result" class="d-none">                    <div class="alert" role="alert"></div>                </div>                {% if recommendations %}                <h6>Текущие рекомендации</h6>                <div class="list-group">                    {% for recommendation in recommendations %}                    <div class="list-group-item">                        <h6 class="mb-1">{{ recommendation.title }}</h6>                        <p class="mb-1">{{ recommendation.description }}</p>                        <small class="text-muted">Приоритет: {{ recommendation.priority }}</small>                    </div>                    {% endfor %}                </div>                {% endif %}            </div>        </div>    </div></div>
+{% block title %}{{ customer.surname }} - Детали клиента{% endblock %}
+
+{% block extra_head %}
+<link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
+<style>
+    body {
+        background: linear-gradient(135deg, #ffe0f0, #ffc2e2);
+        font-family: 'Poppins', sans-serif;
+    }
+
+    h1, h5 {
+        color: #d63384;
+    }
+
+    .card {
+        border: none;
+        border-radius: 1rem;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+    }
+
+    .btn-primary {
+        background-color: #e83e8c;
+        border: none;
+    }
+
+    .btn-success {
+        background-color: #c2185b;
+        border: none;
+    }
+
+    .badge.bg-danger {
+        background-color: #f06292;
+    }
+
+    .badge.bg-success {
+        background-color: #81c784;
+    }
+
+    .list-group-item {
+        border: none;
+        background-color: #fff0f6;
+        border-radius: 0.75rem;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Новый стиль для анимаций салютов и смайликов */
+    .animation-container {
+        position: relative;
+        width: 100%;
+        height: 150px;
+        margin-top: 1rem;
+        overflow: visible;
+    }
+
+    .firework, .angry-emoji {
+        position: absolute;
+        font-size: 2.5rem;
+        opacity: 0;
+        pointer-events: none;
+        animation-fill-mode: forwards;
+    }
+
+    @keyframes firework-explode {
+        0% {opacity: 1; transform: translateY(0) scale(1);}
+        100% {opacity: 0; transform: translateY(-100px) scale(1.5);}
+    }
+
+    @keyframes angry-fall {
+        0% {opacity: 1; transform: translateY(-50px) rotate(0deg);}
+        100% {opacity: 0; transform: translateY(150px) rotate(360deg);}
+    }
+
+    .firework.show {
+        animation: firework-explode 1.2s ease-out forwards;
+    }
+
+    .angry-emoji.show {
+        animation: angry-fall 1.5s ease-in forwards;
+    }
+
+    /* Стили для шапки с кнопками-разграничителями */
+    .navbar-custom {
+        background: linear-gradient(135deg, #ff8cc4, #ff3d90);
+        padding: 1rem 2rem;
+        font-family: 'Poppins', sans-serif;
+    }
+
+    .nav-btn {
+        color: white;
+        margin-right: 12px;
+        padding: 8px 20px;
+        border-radius: 30px;
+        background: #ff66b3;
+        box-shadow: 0 4px 8px rgba(255, 102, 179, 0.4);
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: inline-block;
+    }
+
+    .nav-btn:hover {
+        background: #ff3d90;
+        box-shadow: 0 6px 12px rgba(255, 61, 144, 0.6);
+        transform: translateY(-3px);
+    }
+
+    .nav-btn.active {
+        background: #f72585;
+        box-shadow: 0 0 20px 2px #f72585;
+        font-weight: 700;
+    }
+</style>
 {% endblock %}
 
-{% block extra_js %}<script>$(document).ready(function() {    $('#predict-churn').click(function() {        const customerId = $(this).data('customer-id');        const resultDiv = $('#prediction-result');        const alertDiv = resultDiv.find('.alert');                $.ajax({            url: `/churn/predict/${customerId}/`,            method: 'GET',            success: function(response) {                resultDiv.removeClass('d-none');                if (response.will_churn) {                    alertDiv.removeClass('alert-success').addClass('alert-danger')                        .html(`Высокий риск оттока (${response.probability.toFixed(2)}%)`);                } else {                    alertDiv.removeClass('alert-danger').addClass('alert-success')                        .html(`Низкий риск оттока (${response.probability.toFixed(2)}%)`);                }            },            error: function(xhr) {                resultDiv.removeClass('d-none');                alertDiv.removeClass('alert-success').addClass('alert-danger')                    .html('Ошибка при расчете вероятности оттока');            }        });    });    $('#generate-recommendations').click(function() {        const customerId = $(this).data('customer-id');        const resultDiv = $('#recommendations-result');        const alertDiv = resultDiv.find('.alert');                $.ajax({            url: `/recommendations/generate/${customerId}/`,            method: 'GET',            success: function(response) {                resultDiv.removeClass('d-none');                if (response.success) {                    let html = '<div class="list-group">';                    response.recommendations.forEach(function(rec) {                        html += `                            <div class="list-group-item">                                <h6 class="mb-1">${rec.title}</h6>                                <p class="mb-1">${rec.description}</p>                                <small class="text-muted">Приоритет: ${rec.priority}</small>                            </div>`;                    });                    html += '</div>';                    alertDiv.removeClass('alert-danger').addClass('alert-success').html(html);                } else {                    alertDiv.removeClass('alert-success').addClass('alert-danger')                        .html('Ошибка при формировании рекомендаций');                }            },            error: function(xhr) {                resultDiv.removeClass('d-none');                alertDiv.removeClass('alert-success').addClass('alert-danger')                    .html('Ошибка при формировании рекомендаций');            }        });    });});</script>{% endblock %} 
+{% block header %}
+<!-- Добавим кастомную навигацию с кнопками-разграничителями -->
+<nav class="navbar-custom">
+    <a href="{% url 'customers_input' %}" class="nav-btn {% if request.resolver_match.url_name == 'customers_input' %}active{% endif %}">Ввод клиентов</a>
+    <a href="{% url 'customers_list' %}" class="nav-btn {% if request.resolver_match.url_name == 'customers_list' %}active{% endif %}">Список клиентов</a>
+    <a href="{% url 'churn_history' %}" class="nav-btn {% if request.resolver_match.url_name == 'churn_history' %}active{% endif %}">История предсказаний</a>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8" data-aos="fade-right">
+        <h1>Информация о клиенте: {{ customer.surname }}</h1>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">👤 Личная информация</h5>
+                <table class="table">
+                    <tr><th>ID клиента:</th><td>{{ customer.customer_id }}</td></tr>
+                    <tr><th>Регион:</th><td>{{ customer.geography }}</td></tr>
+                    <tr><th>Пол:</th><td>{{ customer.gender }}</td></tr>
+                    <tr><th>Возраст:</th><td>{{ customer.age }}</td></tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">🌟 Информация о счете</h5>
+                <table class="table">
+                    <tr><th>Кредитный рейтинг:</th><td>{{ customer.creditscore }}</td></tr>
+                    <tr><th>Баланс:</th><td> ₽ {{ customer.balance|floatformat:2 }} </td></tr>
+                    <tr><th>Продукты:</th><td>{{ customer.numofproducts }}</td></tr>
+                    <tr><th>Срок обслуживания (в годах) :</th><td>{{ customer.tenure }} </td></tr>
+                    <tr><th>Кредитная карта:</th><td>{% if customer.hascrcard %}Да{% else %}Нет{% endif %}</td></tr>
+                    <tr><th>Активный клиент:</th><td>{% if customer.isactivemember %}Да{% else %}Нет{% endif %}</td></tr>
+                    <tr><th>Предполагаемая зарплата:</th><td>₽ {{ customer.estimatedsalary|floatformat:2 }}</td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4" data-aos="fade-left">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">🚀 Анализ оттока</h5>
+                <button id="predict-churn" class="btn btn-primary mb-3 w-100" data-customer-id="{{ customer.pk }}">
+                    Рассчитать вероятность оттока
+                </button>
+                <div id="prediction-result" class="d-none">
+                    <div class="alert" role="alert"></div>
+                    <div class="animation-container" aria-hidden="true"></div>
+                </div>
+                {% if churn_predictions %}
+                <h6>Предыдущие предсказания</h6>
+                <ul class="list-group">
+                    {% for prediction in churn_predictions|slice:"-5:" %}
+                    <li class="list-group-item">
+                        {{ prediction.prediction_date|date:"d.m.Y H:i" }}:
+                        {% if prediction.predicted_churn %}
+                        <span class="badge bg-danger">Высокий риск ({{ prediction.churn_probability|floatformat:2 }}%)</span>
+                        {% else %}
+                        <span class="badge bg-success">Низкий риск ({{ prediction.churn_probability|floatformat:2 }}%)</span>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">💡 Рекомендации</h5>
+                <button id="generate-recommendations" class="btn btn-success mb-3 w-100" data-customer-id="{{ customer.pk }}">
+                    Сформировать рекомендации
+                </button>
+                <div id="recommendations-result" class="d-none">
+                    <div class="alert" role="alert"></div>
+                </div>
+                {% if recommendations %}
+                <h6>Текущие рекомендации</h6>
+                <div class="list-group">
+                    {% for recommendation in recommendations %}
+                    <div class="list-group-item">
+                        <h6 class="mb-1">{{ recommendation.title }}</h6>
+                        <p class="mb-1">{{ recommendation.description }}</p>
+                        <small class="text-muted">Приоритет: {{ recommendation.priority }}</small>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+<script>
+    AOS.init({ once: true });
+
+    function createFirework(x, y) {
+        const colors = ['💖', '🍓', '🥂', '✨', '🌸'];
+        const container = document.createElement('div');
+        container.style.position = 'absolute';
+        container.style.left = `${x}px`;
+        container.style.top = `${y}px`;
+        for (let i = 0; i < 15; i++) {
+            const span = document.createElement('span');
+            span.textContent = colors[Math.floor(Math.random() * colors.length)];
+            span.classList.add('firework');
+            span.style.left = (Math.random() * 60 - 30) + 'px';
+            span.style.top = (Math.random() * 60 - 30) + 'px';
+            container.appendChild(span);
+            setTimeout(() => {
+                span.classList.add('show');
+            }, i * 100);
+            setTimeout(() => {
+                span.remove();
+            }, 1500);
+        }
+        return container;
+    }
+
+    function createAngryEmojis(x, y) {
+        const emojis = ['😠', '💢', '🖕', '👎', '😡'];
+        const container = document.createElement('div');
+        container.style.position = 'absolute';
+        container.style.left = `${x}px`;
+        container.style.top = `${y}px`;
+        for (let i = 0; i < 15; i++) {
+            const span = document.createElement('span');
+            span.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+            span.classList.add('angry-emoji');
+            span.style.left = (Math.random() * 60 - 30) + 'px';
+            span.style.top = (Math.random() * 60 - 30) + 'px';
+            container.appendChild(span);
+            setTimeout(() => {
+                span.classList.add('show');
+            }, i * 100);
+            setTimeout(() => {
+                span.remove();
+            }, 1600);
+        }
+        return container;
+    }
+
+    $(document).ready(function() {
+        $('#predict-churn').click(function() {
+            const customerId = $(this).data('customer-id');
+            const resultDiv = $('#prediction-result');
+            const alertDiv = resultDiv.find('.alert');
+            const animContainer = resultDiv.find('.animation-container');
+
+            $.ajax({
+                url: `/churn/predict/${customerId}/`,
+                method: 'GET',
+                success: function(response) {
+                    resultDiv.removeClass('d-none');
+                    animContainer.empty();
+
+                    if (response.will_churn) {
+                        alertDiv.removeClass('alert-success').addClass('alert-danger')
+                            .html(`Скорее уйдёт 👎 (${response.probability.toFixed(2)}%)`);
+                        const fireworks = createAngryEmojis(animContainer.width()/2, animContainer.height()/2);
+                        animContainer.append(fireworks);
+                    } else {
+                        alertDiv.removeClass('alert-danger').addClass('alert-success')
+                            .html(`Стабильный клиент 😊 (${response.probability.toFixed(2)}%)`);
+                        const fireworks = createFirework(animContainer.width()/2, animContainer.height()/2);
+                        animContainer.append(fireworks);
+                    }
+                },
+                error: function() {
+                    resultDiv.removeClass('d-none');
+                    alertDiv.removeClass('alert-success').addClass('alert-danger')
+                        .html('Ошибка при расчете оттока');
+                    animContainer.empty();
+                }
+            });
+        });
+
+        $('#generate-recommendations').click(function() {
+            const customerId = $(this).data('customer-id');
+            const resultDiv = $('#recommendations-result');
+            const alertDiv = resultDiv.find('.alert');
+
+            $.ajax({
+                url: `/recommendations/generate/${customerId}/`,
+                method: 'GET',
+                success: function(response) {
+                    resultDiv.removeClass('d-none');
+                    if (response.success) {
+                        let html = '<div class="list-group">';
+                        response.recommendations.forEach(function(rec) {
+                            html += `
+                                <div class="list-group-item">
+                                    <h6 class="mb-1">${rec.title}</h6>
+                                    <p class="mb-1">${rec.description}</p>
+                                    <small class="text-muted">Приоритет: ${rec.priority}</small>
+                                </div>`;
+                        });
+                        html += '</div>';
+                        alertDiv.html('Рекомендации сформированы:').removeClass('alert-danger').addClass('alert-success');
+                        resultDiv.append(html);
+                    } else {
+                        alertDiv.html('Не удалось сформировать рекомендации').removeClass('alert-success').addClass('alert-danger');
+                    }
+                },
+                error: function() {
+                    resultDiv.removeClass('d-none');
+                    alertDiv.html('Ошибка при формировании рекомендаций').removeClass('alert-success').addClass('alert-danger');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

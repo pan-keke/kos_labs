@@ -2,27 +2,196 @@
 
 {% block title %}История предсказаний - Анализ оттока клиентов банка{% endblock %}
 
+{% block extra_head %}
+<!-- AOS (анимация при прокрутке) -->
+<link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
+<style>
+  /* Барби кор палитра */
+  :root {
+    --pink-light: #f8bbd0;
+    --pink-main: #e91e63;
+    --pink-dark: #ad1457;
+    --purple-light: #ce93d8;
+    --purple-main: #9c27b0;
+    --purple-dark: #6a0080;
+    --text-dark: #4a148c;
+    --shadow-pink: rgba(233, 30, 99, 0.3);
+  }
+
+  body {
+    background: linear-gradient(135deg, var(--pink-light), var(--purple-light));
+    font-family: 'Poppins', sans-serif;
+    color: var(--text-dark);
+  }
+
+  h3, h5 {
+    font-weight: 700;
+    letter-spacing: 1.2px;
+  }
+
+  .card {
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 6px 20px var(--shadow-pink);
+    transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55), box-shadow 0.3s ease;
+    background: white;
+  }
+
+  .filter-card {
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .filter-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.1);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .filter-card:hover::after {
+    opacity: 1;
+  }
+
+  .filter-card.active::before {
+    content: '✓';
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 1.2rem;
+    color: white;
+    background: rgba(0, 0, 0, 0.2);
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .card:hover {
+    transform: translateY(-12px) scale(1.03);
+    box-shadow: 0 12px 40px var(--shadow-pink);
+  }
+
+  .badge {
+    font-size: 0.95em;
+    padding: 0.5em 1.1em;
+    border-radius: 2rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    user-select: none;
+  }
+
+  .badge.bg-danger {
+    background: linear-gradient(45deg, #f50057, #c51162);
+    color: white;
+  }
+
+  .badge.bg-success {
+    background: linear-gradient(45deg, #7b1fa2, #4a148c);
+    color: white;
+  }
+
+  .table th {
+    background: var(--pink-light);
+    color: var(--purple-dark);
+    font-weight: 600;
+    border-bottom: none;
+  }
+
+  .table-striped tbody tr:nth-of-type(odd) {
+    background-color: #fde7f2;
+  }
+
+  .btn-sm {
+    border-radius: 2rem;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    padding: 0.35rem 1.2rem;
+    transition: background-color 0.3s ease, transform 0.25s ease, box-shadow 0.3s ease;
+  }
+
+  .btn-sm.btn-outline-primary {
+    color: var(--pink-main);
+    border-color: var(--pink-main);
+    background: transparent;
+  }
+
+  .btn-sm.btn-outline-primary:hover {
+    background: var(--pink-main);
+    color: white;
+    box-shadow: 0 8px 20px var(--shadow-pink);
+    transform: scale(1.1);
+  }
+
+  .pagination .page-item.active .page-link {
+    background: var(--pink-main);
+    border-color: var(--pink-main);
+    color: white;
+    font-weight: 700;
+  }
+
+  .pagination .page-link {
+    border-radius: 1rem;
+    color: var(--purple-dark);
+    font-weight: 600;
+  }
+
+  /* Заголовки карточек */
+  .card-header h3 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 800;
+    color: var(--purple-dark);
+    letter-spacing: 0.08em;
+  }
+
+  /* Карточки сверху */
+  .card-body.text-center h2 {
+    font-size: 3rem;
+    font-weight: 900;
+    color: var(--pink-main);
+  }
+
+  /* AOS кастомизация */
+  [data-aos][data-aos][data-aos-duration] {
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row mb-4">
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
+    <div class="col-md-4" data-aos="fade-up" data-aos-duration="700">
+        <div class="card filter-card {% if not current_filter %}active{% endif %}" onclick="applyFilter('')">
+            <div class="card-body text-center">
                 <h5 class="card-title">Всего предсказаний</h5>
                 <h2 class="card-text">{{ total_predictions }}</h2>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card bg-danger text-white">
-            <div class="card-body">
+    <div class="col-md-4" data-aos="fade-up" data-aos-delay="150" data-aos-duration="700">
+        <div class="card filter-card {% if current_filter == 'high_risk' %}active{% endif %}" 
+             onclick="applyFilter('high_risk')"
+             style="background: linear-gradient(135deg, #ff4081, #ffadce); color: white;">
+            <div class="card-body text-center">
                 <h5 class="card-title">Клиенты с высоким риском</h5>
                 <h2 class="card-text">{{ high_risk_count }}</h2>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card bg-success text-white">
-            <div class="card-body">
+    <div class="col-md-4" data-aos="fade-up" data-aos-delay="300" data-aos-duration="700">
+        <div class="card filter-card {% if current_filter == 'low_risk' %}active{% endif %}"
+             onclick="applyFilter('low_risk')"
+             style="background: linear-gradient(135deg, #7b1fa2, #4a148c); color: white;">
+            <div class="card-body text-center">
                 <h5 class="card-title">Клиенты с низким риском</h5>
                 <h2 class="card-text">{{ low_risk_count }}</h2>
             </div>
@@ -30,14 +199,14 @@
     </div>
 </div>
 
-<div class="card">
+<div class="card" data-aos="fade-up" data-aos-duration="900">
     <div class="card-header">
         <h3>История предсказаний</h3>
     </div>
     <div class="card-body">
         <div class="table-responsive">
-            <table class="table table-striped">
-                <thead>
+            <table class="table table-striped align-middle" style="border-radius: 1rem; overflow: hidden;">
+                <thead class="table-light">
                     <tr>
                         <th>Дата</th>
                         <th>Клиент</th>
@@ -49,14 +218,14 @@
                 </thead>
                 <tbody>
                     {% for prediction in predictions %}
-                    <tr>
+                    <tr data-aos="fade-up" data-aos-delay="{{ forloop.counter0|add:"1" }}00" data-aos-duration="600" style="cursor: default;">
                         <td>{{ prediction.prediction_date|date:"d.m.Y H:i" }}</td>
                         <td>
-                            <a href="{% url 'data_processor:customer_detail' prediction.customer.pk %}">
+                            <a href="{% url 'data_processor:customer_detail' prediction.customer.pk %}" class="text-decoration-none text-pink-main fw-semibold">
                                 {{ prediction.customer.surname }}
                             </a>
                         </td>
-                        <td>{{ prediction.churn_probability|floatformat:2 }}%</td>
+                        <td><strong>{{ prediction.churn_probability|floatformat:2 }}%</strong></td>
                         <td>
                             {% if prediction.predicted_churn %}
                             <span class="badge bg-danger">Высокий риск</span>
@@ -72,9 +241,9 @@
                             {% endif %}
                         </td>
                         <td>
-                            <a href="{% url 'recommendation_system:generate_recommendations' prediction.customer.pk %}" 
-                               class="btn btn-sm btn-primary">
-                                Получить рекомендации
+                            <a href="{% url 'data_processor:customer_detail' prediction.customer.pk %}"
+                               class="btn btn-sm btn-outline-primary" title="Посмотреть рекомендации">
+                                🌺 Карточка клиента
                             </a>
                         </td>
                     </tr>
@@ -85,22 +254,22 @@
 
         {% if is_paginated %}
         <nav>
-            <ul class="pagination justify-content-center">
+            <ul class="pagination justify-content-center mt-4">
                 {% if page_obj.has_previous %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Назад</a>
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if current_filter %}&filter={{ current_filter }}{% endif %}">Назад</a>
                 </li>
                 {% endif %}
 
                 {% for num in page_obj.paginator.page_range %}
                 <li class="page-item {% if page_obj.number == num %}active{% endif %}">
-                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    <a class="page-link" href="?page={{ num }}{% if current_filter %}&filter={{ current_filter }}{% endif %}">{{ num }}</a>
                 </li>
                 {% endfor %}
 
                 {% if page_obj.has_next %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Вперёд</a>
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if current_filter %}&filter={{ current_filter }}{% endif %}">Вперёд</a>
                 </li>
                 {% endif %}
             </ul>
@@ -108,4 +277,22 @@
         {% endif %}
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+<script>
+  AOS.init({ once: true });
+
+  function applyFilter(filterType) {
+    const currentUrl = new URL(window.location.href);
+    if (filterType) {
+      currentUrl.searchParams.set('filter', filterType);
+    } else {
+      currentUrl.searchParams.delete('filter');
+    }
+    currentUrl.searchParams.delete('page'); // Reset to first page when filtering
+    window.location.href = currentUrl.toString();
+  }
+</script>
 {% endblock %}

@@ -40,11 +40,23 @@ class PredictionHistoryView(LoginRequiredMixin, ListView):
     paginate_by = 20
     ordering = ['-prediction_date']
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        filter_type = self.request.GET.get('filter')
+        
+        if filter_type == 'high_risk':
+            queryset = queryset.filter(predicted_churn=True)
+        elif filter_type == 'low_risk':
+            queryset = queryset.filter(predicted_churn=False)
+        
+        return queryset
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['total_predictions'] = ChurnPrediction.objects.count()
         context['high_risk_count'] = ChurnPrediction.objects.filter(predicted_churn=True).count()
         context['low_risk_count'] = ChurnPrediction.objects.filter(predicted_churn=False).count()
+        context['current_filter'] = self.request.GET.get('filter', '')
         return context
 
 def get_training_status(request):

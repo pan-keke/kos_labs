@@ -1,31 +1,230 @@
 {% extends 'base.html' %}
 
-{% block title %}Recommendations - Bank Churn Analysis{% endblock %}
+{% block title %}Рекомендации - Анализ оттока клиентов банка{% endblock %}
+
+{% block extra_head %}
+<link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
+<style>
+    /* Барби кор палитра */
+    :root {
+        --pink-light: #f8bbd0;
+        --pink-main: #e91e63;
+        --pink-dark: #ad1457;
+        --purple-light: #ce93d8;
+        --purple-main: #9c27b0;
+        --purple-dark: #6a0080;
+        --text-dark: #4a148c;
+        --shadow-pink: rgba(233, 30, 99, 0.3);
+    }
+
+    body {
+        background: linear-gradient(135deg, var(--pink-light), var(--purple-light));
+        font-family: 'Poppins', sans-serif;
+        color: var(--text-dark);
+    }
+
+    .card {
+        border: none;
+        border-radius: 1rem;
+        box-shadow: 0 6px 20px var(--shadow-pink);
+        transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55), box-shadow 0.3s ease;
+        background: white;
+    }
+
+    .filter-card {
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .filter-card::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.1);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .filter-card:hover::after {
+        opacity: 1;
+    }
+
+    .filter-card.active::before {
+        content: '✓';
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 1.2rem;
+        color: white;
+        background: rgba(0, 0, 0, 0.2);
+        width: 25px;
+        height: 25px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .card:hover {
+        transform: translateY(-12px) scale(1.03);
+        box-shadow: 0 12px 40px var(--shadow-pink);
+    }
+
+    .badge {
+        font-size: 0.95em;
+        padding: 0.5em 1.1em;
+        border-radius: 2rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        user-select: none;
+    }
+
+    .badge.bg-danger {
+        background: linear-gradient(45deg, #f50057, #c51162);
+        color: white;
+    }
+
+    .badge.bg-warning {
+        background: linear-gradient(45deg, #ff9800, #f57c00);
+        color: white;
+    }
+
+    .badge.bg-info {
+        background: linear-gradient(45deg, #7b1fa2, #4a148c);
+        color: white;
+    }
+
+    .badge.bg-success {
+        background: linear-gradient(45deg, #7b1fa2, #4a148c);
+        color: white;
+    }
+
+    .badge.bg-secondary {
+        background: linear-gradient(45deg, #9e9e9e, #616161);
+        color: white;
+    }
+
+    .table th {
+        background: var(--pink-light);
+        color: var(--purple-dark);
+        font-weight: 600;
+        border-bottom: none;
+    }
+
+    .table-striped tbody tr:nth-of-type(odd) {
+        background-color: #fde7f2;
+    }
+
+    .card-header h3 {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 800;
+        color: var(--purple-dark);
+        letter-spacing: 0.08em;
+    }
+
+    .card-body.text-center h2 {
+        font-size: 3rem;
+        font-weight: 900;
+        color: var(--pink-main);
+    }
+
+    .pagination .page-item.active .page-link {
+        background: var(--pink-main);
+        border-color: var(--pink-main);
+        color: white;
+        font-weight: 700;
+    }
+
+    .pagination .page-link {
+        border-radius: 1rem;
+        color: var(--purple-dark);
+        font-weight: 600;
+    }
+
+    a {
+        color: var(--pink-main);
+        text-decoration: none;
+    }
+
+    a:hover {
+        color: var(--pink-dark);
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="card">
+<div class="row mb-4">
+    <div class="col-md-4" data-aos="fade-up" data-aos-duration="700">
+        <div class="card filter-card {% if not current_filter %}active{% endif %}" onclick="applyFilter('')">
+            <div class="card-body text-center">
+                <h5 class="card-title">Все рекомендации</h5>
+                <h2 class="card-text">{{ page_obj.paginator.count }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4" data-aos="fade-up" data-aos-delay="150" data-aos-duration="700">
+        <div class="card filter-card {% if current_filter == 'high' %}active{% endif %}" 
+             onclick="applyFilter('high')"
+             style="background: linear-gradient(135deg, #ff4081, #ffadce); color: white;">
+            <div class="card-body text-center">
+                <h5 class="card-title" style="color: white;">Высокий приоритет</h5>
+                <h2 class="card-text" style="color: white;">{{ high_priority_count }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4" data-aos="fade-up" data-aos-delay="300" data-aos-duration="700">
+        <div class="card filter-card {% if current_filter == 'medium' %}active{% endif %}"
+             onclick="applyFilter('medium')"
+             style="background: linear-gradient(135deg, #ff9800, #f57c00); color: white;">
+            <div class="card-body text-center">
+                <h5 class="card-title" style="color: white;">Средний приоритет</h5>
+                <h2 class="card-text" style="color: white;">{{ medium_priority_count }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4 offset-md-4" data-aos="fade-up" data-aos-delay="450" data-aos-duration="700">
+        <div class="card filter-card {% if current_filter == 'low' %}active{% endif %}"
+             onclick="applyFilter('low')"
+             style="background: linear-gradient(135deg, #7b1fa2, #4a148c); color: white;">
+            <div class="card-body text-center">
+                <h5 class="card-title" style="color: white;">Низкий приоритет</h5>
+                <h2 class="card-text" style="color: white;">{{ low_priority_count }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card" data-aos="fade-up" data-aos-duration="900">
     <div class="card-header">
-        <h3>Customer Recommendations</h3>
+        <h3>Список рекомендаций</h3>
     </div>
     <div class="card-body">
         <div class="table-responsive">
-            <table class="table table-striped">
-                <thead>
+            <table class="table table-striped align-middle" style="border-radius: 1rem; overflow: hidden;">
+                <thead class="table-light">
                     <tr>
-                        <th>Date</th>
-                        <th>Customer</th>
-                        <th>Title</th>
-                        <th>Description</th>
-                        <th>Priority</th>
-                        <th>Status</th>
+                        <th>Дата</th>
+                        <th>Клиент</th>
+                        <th>Название</th>
+                        <th>Описание</th>
+                        <th>Приоритет</th>
+                        <th>Статус</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for recommendation in recommendations %}
-                    <tr>
-                        <td>{{ recommendation.created_at|date:"Y-m-d H:i" }}</td>
+                    <tr data-aos="fade-up" data-aos-delay="{{ forloop.counter0|add:"1" }}00" data-aos-duration="600">
+                        <td>{{ recommendation.created_at|date:"d.m.Y H:i" }}</td>
                         <td>
-                            <a href="{% url 'data_processor:customer_detail' recommendation.customer.pk %}">
+                            <a href="{% url 'data_processor:customer_detail' recommendation.customer.pk %}" class="text-decoration-none text-pink-main fw-semibold">
                                 {{ recommendation.customer.surname }}
                             </a>
                         </td>
@@ -33,24 +232,24 @@
                         <td>{{ recommendation.description }}</td>
                         <td>
                             {% if recommendation.priority == 1 %}
-                            <span class="badge bg-danger">High</span>
+                            <span class="badge bg-danger">Высокий</span>
                             {% elif recommendation.priority == 2 %}
-                            <span class="badge bg-warning">Medium</span>
+                            <span class="badge bg-warning">Средний</span>
                             {% else %}
-                            <span class="badge bg-info">Low</span>
+                            <span class="badge bg-info">Низкий</span>
                             {% endif %}
                         </td>
                         <td>
                             {% if recommendation.is_active %}
-                            <span class="badge bg-success">Active</span>
+                            <span class="badge bg-success">Активна</span>
                             {% else %}
-                            <span class="badge bg-secondary">Inactive</span>
+                            <span class="badge bg-secondary">Неактивна</span>
                             {% endif %}
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="text-center">No recommendations available.</td>
+                        <td colspan="6" class="text-center">Нет доступных рекомендаций.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -59,22 +258,22 @@
 
         {% if is_paginated %}
         <nav>
-            <ul class="pagination justify-content-center">
+            <ul class="pagination justify-content-center mt-4">
                 {% if page_obj.has_previous %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if current_filter %}&filter={{ current_filter }}{% endif %}">Назад</a>
                 </li>
                 {% endif %}
 
                 {% for num in page_obj.paginator.page_range %}
                 <li class="page-item {% if page_obj.number == num %}active{% endif %}">
-                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    <a class="page-link" href="?page={{ num }}{% if current_filter %}&filter={{ current_filter }}{% endif %}">{{ num }}</a>
                 </li>
                 {% endfor %}
 
                 {% if page_obj.has_next %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if current_filter %}&filter={{ current_filter }}{% endif %}">Вперёд</a>
                 </li>
                 {% endif %}
             </ul>
@@ -82,33 +281,22 @@
         {% endif %}
     </div>
 </div>
+{% endblock %}
 
-<div class="mt-4">
-    <div class="row">
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">High Priority</h5>
-                    <h2 class="card-text">{{ high_priority_count }}</h2>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Medium Priority</h5>
-                    <h2 class="card-text">{{ medium_priority_count }}</h2>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Low Priority</h5>
-                    <h2 class="card-text">{{ low_priority_count }}</h2>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock %} 
+{% block extra_js %}
+<script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+<script>
+  AOS.init({ once: true });
+
+  function applyFilter(filterType) {
+    const currentUrl = new URL(window.location.href);
+    if (filterType) {
+      currentUrl.searchParams.set('filter', filterType);
+    } else {
+      currentUrl.searchParams.delete('filter');
+    }
+    currentUrl.searchParams.delete('page'); // Reset to first page when filtering
+    window.location.href = currentUrl.toString();
+  }
+</script>
+{% endblock %}

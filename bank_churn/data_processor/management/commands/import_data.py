@@ -32,8 +32,8 @@ class Command(BaseCommand):
                     tenure=row['Tenure'],
                     balance=row['Balance'],
                     numofproducts=row['NumOfProducts'],
-                    hascrcard=bool(row['HasCrCard']),
-                    isactivemember=bool(row['IsActiveMember']),
+                    hascrcard=bool(row['Has credit card']),
+                    isactivemember=bool(row['Is active member']),
                     estimatedsalary=row['EstimatedSalary'],
                     exited=bool(row['Exited'])
                 )

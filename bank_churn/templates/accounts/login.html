@@ -2,12 +2,72 @@
 
 {% block title %}Login - Bank Churn Analysis{% endblock %}
 
+{% block extra_head %}
+<!-- AOS анимации -->
+<link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
+<style>
+
+    body {
+        background: linear-gradient(to right, #fbc2eb, #a6c1ee);
+    }
+
+    .card.barbie {
+        background: linear-gradient(135deg, #ffd6ea, #ffb6d9);
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 0 20px rgba(255, 105, 180, 0.3);
+        padding: 1rem;
+    }
+
+    .card-header.barbie {
+        background-color: #ff69b4;
+        color: white;
+        border-radius: 20px 20px 0 0;
+        text-align: center;
+        font-weight: bold;
+        font-size: 1.5rem;
+        border-bottom: none;
+    }
+
+    .btn-barbie {
+
+        background-color: #ff69b4;
+        color: white;
+        border: none;
+        font-weight: bold;
+    }
+
+    .btn-barbie:hover {
+        background-color: #ff1493;
+    }
+
+    .form-label {
+        color: #ff1493;
+        font-weight: bold;
+    }
+
+    .alert-danger {
+        background-color: #ffc0cb;
+        border-color: #ff69b4;
+        color: #6b0032;
+    }
+
+    a {
+        color: #d63384;
+    }
+
+    a:hover {
+        color: #ff1493;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="row justify-content-center">
+<div class="row justify-content-center" data-aos="zoom-in" data-aos-duration="800">
     <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h3 class="text-center">Login</h3>
+        <div class="card barbie">
+            <div class="card-header barbie">
+                Login
             </div>
             <div class="card-body">
                 <form method="post">
@@ -24,7 +84,7 @@
                     </div>
                     {% endfor %}
                     <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary">Login</button>
+                        <button type="submit" class="btn btn-barbie">Login</button>
                     </div>
                 </form>
                 <hr>
@@ -33,4 +93,12 @@
         </div>
     </div>
 </div>
-{% endblock %} 
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+<script>
+  AOS.init({ once: true });
+</script>
+{% endblock %}

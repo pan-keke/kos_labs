@@ -6,6 +6,7 @@ from .models import Customer
 from churn_predictor.utils import predict_churn
 from django import forms
 
+
 # Create your views here.
 
 class ChurnPredictionForm(forms.Form):
@@ -99,23 +100,26 @@ class ChurnPredictionForm(forms.Form):
         cleaned_data['isactivemember'] = 1 if cleaned_data.get('isactivemember') else 0
         return cleaned_data
 
+
 class CustomerListView(ListView):
     model = Customer
     template_name = 'data_processor/customer_list.html'
     context_object_name = 'customers'
     paginate_by = 50
 
+
 class CustomerDetailView(DetailView):
     model = Customer
     template_name = 'data_processor/customer_detail.html'
     context_object_name = 'customer'
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         customer = self.get_object()
         context['churn_predictions'] = customer.churn_predictions.all()
         context['recommendations'] = customer.recommendations.all()
         return context
+
 
 class ChurnPredictionView(LoginRequiredMixin, FormView):
     template_name = 'data_processor/input_form.html'
@@ -125,23 +129,24 @@ class ChurnPredictionView(LoginRequiredMixin, FormView):
     def form_valid(self, form):
         # Получаем данные из формы
         data = form.cleaned_data
-        
+
         # Предсказываем вероятность оттока
         prediction_result = predict_churn(data)
-        
+
         if prediction_result.get('error'):
             # Если произошла ошибка, показываем её пользователю
             form.add_error(None, prediction_result['error'])
             return self.form_invalid(form)
-        
+
         # Сохраняем результат в сессии для отображения
         self.request.session['prediction_result'] = {
             'probability': prediction_result['probability'],
             'will_churn': prediction_result['will_churn'],
             'customer_data': data
         }
-        
+
         return super().form_valid(form)
+
 
 class PredictionResultView(LoginRequiredMixin, TemplateView):
     template_name = 'data_processor/prediction_result.html'
@@ -150,3 +155,41 @@ class PredictionResultView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         context['prediction'] = self.request.session.get('prediction_result')
         return context
+
+
+class CustomerDetailView(DetailView):
+    model = Customer
+    template_name = 'data_processor/customer_detail.html'
+    context_object_name = 'customer'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        customer = self.get_object()
+
+        # Получаем GET-параметр
+        filter_param = self.request.GET.get('filter')
+
+        # Все предсказания
+        churn_predictions = customer.churn_predictions.all()
+
+        # Фильтрация
+        if filter_param == 'churn':
+            churn_predictions = churn_predictions.filter(predicted_churn=True)
+        elif filter_param == 'stay':
+            churn_predictions = churn_predictions.filter(predicted_churn=False)
+
+        context['churn_predictions'] = churn_predictions
+        context['recommendations'] = customer.recommendations.all()
+
+        # Общая статистика (для отображения в карточках)
+        total = customer.churn_predictions.count()
+        churn_count = customer.churn_predictions.filter(predicted_churn=True).count()
+        stay_count = total - churn_count
+
+        context['total_churn_predictions'] = total
+        context['churn_count'] = churn_count
+        context['stay_count'] = stay_count
+
+        return context
+
+

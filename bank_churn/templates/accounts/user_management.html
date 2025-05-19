@@ -1,23 +1,130 @@
 {% extends 'base.html' %}
 
-{% block title %}User Management - Bank Churn Analysis{% endblock %}
+{% block title %}💖 Управление пользователями - Анализ оттока клиентов {% endblock %}
 
 {% block content %}
-<div class="card">
+<style>
+    body {
+        background: linear-gradient(to bottom right, #ffe0f0, #ffccf9);
+    }
+
+    .card {
+        background-color: #fff0fa;
+        border-radius: 2rem;
+        box-shadow: 0 0 25px rgba(255, 182, 193, 0.5);
+        animation: fadeIn 0.8s ease;
+    }
+
+    .card-header {
+        background-color: #ffb3e6;
+        border-top-left-radius: 2rem;
+        border-top-right-radius: 2rem;
+        color: #a00080;
+        font-size: 1.8rem;
+        text-align: center;
+        font-weight: 600;
+    }
+
+    .table {
+        background-color: #fff8fc;
+        border-radius: 1rem;
+        overflow: hidden;
+        animation: fadeIn 1s ease-in;
+    }
+
+    .table th {
+        background-color: #ffcce5;
+        color: #800050;
+        font-weight: 600;
+        text-align: center;
+    }
+
+    .table td {
+        vertical-align: middle;
+        text-align: center;
+        color: #5c005c;
+    }
+
+    .badge {
+        border-radius: 1rem;
+        padding: 0.4em 0.8em;
+        font-size: 0.85em;
+        font-weight: 500;
+    }
+
+    .dropdown-menu {
+        border-radius: 1rem;
+        background-color: #fff0f5;
+        border: 1px solid #ffcce5;
+    }
+
+    .dropdown-item {
+        color: #800050;
+        transition: background-color 0.2s ease;
+    }
+
+    .dropdown-item:hover {
+        background-color: #ffebf5;
+        color: #b8005b;
+    }
+
+    .pagination .page-link {
+        border-radius: 1rem !important;
+        background-color: #ffddf5;
+        color: #800040;
+        border: none;
+        margin: 0 0.2rem;
+    }
+
+    .pagination .page-item.active .page-link {
+        background-color: #ff66cc;
+        color: #fff;
+    }
+
+    .btn-secondary {
+        background-color: #ffc0cb;
+        border: none;
+        border-radius: 1rem;
+        color: #800040;
+        font-weight: 500;
+    }
+
+    .btn-secondary:hover {
+        background-color: #ff99cc;
+        color: white;
+    }
+
+    .btn-danger {
+        color: #cc0033;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+<div class="card mt-5">
     <div class="card-header">
-        <h3>User Management</h3>
+        💼 Управление пользователями
     </div>
     <div class="card-body">
         <div class="table-responsive">
-            <table class="table table-striped">
+            <table class="table table-striped table-hover">
                 <thead>
                     <tr>
-                        <th>Username</th>
+                        <th>Имя пользователя</th>
                         <th>Email</th>
-                        <th>Role</th>
-                        <th>Last Login</th>
-                        <th>Status</th>
-                        <th>Actions</th>
+                        <th>Роль</th>
+                        <th>Последний вход</th>
+                        <th>Статус</th>
+                        <th>Действия</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -27,39 +134,39 @@
                         <td>{{ user.email }}</td>
                         <td>
                             {% if user.is_superuser %}
-                            <span class="badge bg-danger">Admin</span>
+                            <span class="badge bg-danger">Админ</span>
                             {% elif user.is_analyst %}
-                            <span class="badge bg-info">Analyst</span>
+                            <span class="badge bg-info">Аналитик</span>
                             {% else %}
-                            <span class="badge bg-secondary">User</span>
+                            <span class="badge bg-secondary">Пользователь</span>
                             {% endif %}
                         </td>
                         <td>{{ user.last_login|default:"-" }}</td>
                         <td>
                             {% if user.is_active %}
-                            <span class="badge bg-success">Active</span>
+                            <span class="badge bg-success">Активен</span>
                             {% else %}
-                            <span class="badge bg-danger">Inactive</span>
+                            <span class="badge bg-danger">Неактивен</span>
                             {% endif %}
                         </td>
                         <td>
                             <div class="dropdown">
                                 <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                    Actions
+                                    ✨ Действия
                                 </button>
                                 <ul class="dropdown-menu">
                                     <li>
                                         <a href="{% url 'accounts:edit_user' user.id %}" class="dropdown-item">
-                                            Edit
+                                            ✏️ Редактировать
                                         </a>
                                     </li>
                                     {% if not user.is_superuser %}
                                     <li>
                                         <form method="post" action="{% url 'accounts:delete_user' user.id %}" class="d-inline">
                                             {% csrf_token %}
-                                            <button type="submit" class="dropdown-item text-danger" 
-                                                    onclick="return confirm('Are you sure you want to delete this user?')">
-                                                Delete
+                                            <button type="submit" class="dropdown-item text-danger"
+                                                    onclick="return confirm('Удалить пользователя?')">
+                                                ❌ Удалить
                                             </button>
                                         </form>
                                     </li>
@@ -75,10 +182,10 @@
 
         {% if is_paginated %}
         <nav>
-            <ul class="pagination justify-content-center">
+            <ul class="pagination justify-content-center mt-4">
                 {% if page_obj.has_previous %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">← Назад</a>
                 </li>
                 {% endif %}
 
@@ -90,7 +197,7 @@
 
                 {% if page_obj.has_next %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Вперёд →</a>
                 </li>
                 {% endif %}
             </ul>
@@ -98,4 +205,4 @@
         {% endif %}
     </div>
 </div>
-{% endblock %} 
+{% endblock %}
