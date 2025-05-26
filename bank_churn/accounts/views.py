@@ -116,3 +116,4 @@ def delete_user(request, pk):
         messages.success(request, f"User {username} has been deleted successfully.")
     
     return redirect('accounts:user_management')
+
