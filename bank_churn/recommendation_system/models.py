@@ -1,8 +1,6 @@
 from django.db import models
 from data_processor.models import Customer
 
-# Create your models here.
-
 class CustomerCluster(models.Model):
     cluster_id = models.IntegerField()
     cluster_name = models.CharField(max_length=100)

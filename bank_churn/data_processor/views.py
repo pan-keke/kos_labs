@@ -5,11 +5,12 @@ from django.urls import reverse_lazy
 from .models import Customer
 from churn_predictor.utils import predict_churn
 from django import forms
+from django.views import View
+from django.shortcuts import render
 
-
-# Create your views here.
 
 class ChurnPredictionForm(forms.Form):
+
     creditscore = forms.IntegerField(
         min_value=300, max_value=850,
         help_text="Credit score (300-850)",
@@ -107,6 +108,10 @@ class CustomerListView(ListView):
     context_object_name = 'customers'
     paginate_by = 50
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['show_loader'] = True
+        return context
 
 class CustomerDetailView(DetailView):
     model = Customer
