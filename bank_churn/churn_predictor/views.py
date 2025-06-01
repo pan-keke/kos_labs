@@ -68,16 +68,20 @@ class ModelTrainingView(UserPassesTestMixin, TemplateView):
     
     def test_func(self):
         return self.request.user.is_superuser
-    
+
+    from django.shortcuts import redirect
+    from django.urls import reverse
+
+    from django.shortcuts import redirect
+    from django.urls import reverse
+
     def post(self, request, *args, **kwargs):
         try:
-            # Получаем параметры обучения из формы
             epochs = int(request.POST.get('epochs', 100))
             batch_size = int(request.POST.get('batch_size', 32))
             learning_rate = float(request.POST.get('learning_rate', 0.001))
             validation_split = float(request.POST.get('validation_split', 0.2))
-            
-            # Проверяем валидность параметров
+
             if not (1 <= epochs <= 1000):
                 raise ValueError("Количество эпох должно быть от 1 до 1000")
             if batch_size not in [16, 32, 64, 128]:
@@ -86,23 +90,19 @@ class ModelTrainingView(UserPassesTestMixin, TemplateView):
                 raise ValueError("Скорость обучения должна быть от 0.0001 до 0.1")
             if not (0.1 <= validation_split <= 0.3):
                 raise ValueError("Доля валидационной выборки должна быть от 0.1 до 0.3")
-            
-            # Получаем все данные клиентов из базы данных
+
             customers = Customer.objects.all().values(
                 'creditscore', 'geography', 'gender', 'age', 'tenure',
                 'balance', 'numofproducts', 'hascrcard',
                 'isactivemember', 'estimatedsalary', 'exited'
             )
-            
-            # Преобразуем в pandas DataFrame
+
             data = pd.DataFrame(list(customers))
-            
-            # Проверяем, есть ли данные для обучения
+
             if len(data) == 0:
                 messages.error(request, "Нет данных для обучения. Пожалуйста, загрузите данные клиентов.")
-                return self.get(request, *args, **kwargs)
-            
-            # Обучаем модель с заданными параметрами
+                return redirect(request.path)
+
             training_results = train_model(
                 data=data,
                 epochs=epochs,
@@ -110,8 +110,7 @@ class ModelTrainingView(UserPassesTestMixin, TemplateView):
                 learning_rate=learning_rate,
                 validation_split=validation_split
             )
-            
-            # Преобразуем numpy значения в обычные Python типы
+
             metrics = {}
             for key, value in training_results['metrics'].items():
                 if isinstance(value, (np.float32, np.float64)):
@@ -121,7 +120,6 @@ class ModelTrainingView(UserPassesTestMixin, TemplateView):
                 else:
                     metrics[key] = value
 
-            # Ensure we have all required metrics
             if 'accuracy' not in metrics:
                 metrics['accuracy'] = metrics.get('val_accuracy', 0.0)
             if 'auc' not in metrics:
@@ -129,10 +127,8 @@ class ModelTrainingView(UserPassesTestMixin, TemplateView):
             if 'loss' not in metrics:
                 metrics['loss'] = metrics.get('val_loss', 0.0)
 
-            # Round metrics to 4 decimal places
             metrics = {k: round(float(v), 4) for k, v in metrics.items()}
 
-            # Сохраняем результаты в сессии
             request.session['training_results'] = {
                 'metrics': metrics,
                 'training_params': {
@@ -142,15 +138,17 @@ class ModelTrainingView(UserPassesTestMixin, TemplateView):
                     'validation_split': validation_split
                 }
             }
-            
+
             messages.success(request, "Модель успешно обучена!")
-            
+            return redirect(request.path)
+
+
         except ValueError as e:
             messages.error(request, str(e))
         except Exception as e:
             messages.error(request, f"Ошибка при обучении модели: {str(e)}")
-        
-        return self.get(request, *args, **kwargs)
+
+        return redirect(request.path)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -190,6 +188,7 @@ def predict_churn(request, customer_id):
     }
     
     try:
+
         # Используем функцию predict_churn из utils.py
         from .utils import predict_churn as predict_churn_util
         result = predict_churn_util(customer_data)
@@ -201,7 +200,7 @@ def predict_churn(request, customer_id):
                 churn_probability=result['probability'],
                 predicted_churn=result['will_churn']
             )
-        
+
         return JsonResponse({
             'success': not bool(result.get('error')),
             'probability': result.get('probability'),
